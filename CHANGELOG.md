@@ -2,7 +2,12 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/). Versionado según [SemVer](https://semver.org/lang/es/).
 
-## [0.1.0] - Sin publicar
+## [0.1.1] - 2026-08-03
+
+### Corregido
+- `dist/` ahora se commitea al repo, y se sacó el script `prepare` (`npm run build` al instalar). Antes, instalar este paquete como dependencia git ejecutaba `tsc` durante el `npm install` anidado — que rompe en cualquier instalación `--production`/`--prod` (como la imagen runtime de un Dockerfile multi-stage), porque ese modo no instala devDependencies y por lo tanto no existe `tsc`. Confirmado en la práctica: el build de `madfightstadium` fallaba con `ERR_PNPM_PREPARE_PACKAGE ... tsc: not found` al construir la imagen final.
+
+## [0.1.0] - 2026-08-03
 
 ### Añadido
 - Core agnóstico de framework y de proveedor: `EmailMessage` (con `EmailContent` discriminado entre `html`/`text`), `EmailAddress`, `EmailAttachment`, `EmailSendResult`, `EmailProviderPort`.

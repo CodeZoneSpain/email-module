@@ -1,6 +1,6 @@
 {
   "name": "@codezone/email",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Módulo de envío de correo agnóstico de proveedor, con arquitectura de puertos/adaptadores.",
   "private": true,
   "license": "UNLICENSED",
@@ -38,7 +38,6 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "prepare": "npm run build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

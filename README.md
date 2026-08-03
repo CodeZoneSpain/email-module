@@ -1,7 +1,5 @@
 # @codezone/email
 
-Módulo de envío de correo agnóstico de proveedor, con arquitectura de puertos/adaptadores. Compartido entre `madfightstadium`, `joyeria` y (a futuro) `NightControl`.
-
 No maneja correo entrante ni respuestas — solo envío. No sabe nada de negocio (ofertas, reset de contraseña, etc.): eso vive en cada app consumidora, que arma un `EmailMessage` y lo manda.
 
 ## Instalación
@@ -22,24 +20,24 @@ Mientras el repo no esté publicado, se puede usar localmente con `npm install <
 
 El paquete expone tres entradas independientes — importar solo la que se necesita evita cargar dependencias de más:
 
-| Import | Contenido | Requiere `@nestjs/common` |
-|---|---|---|
-| `@codezone/email` | Core (tipos, puerto, errores, `SendEmailUseCase`) + `InMemoryEmailProvider` | No |
-| `@codezone/email/nestjs` | `EmailModule` (`forRoot`/`forRootAsync`) | Sí |
-| `@codezone/email/testing` | `runEmailProviderContractTests` — suite de tests de comportamiento para adapters nuevos | No |
+| Import                    | Contenido                                                                               | Requiere `@nestjs/common` |
+| ------------------------- | --------------------------------------------------------------------------------------- | ------------------------- |
+| `@codezone/email`         | Core (tipos, puerto, errores, `SendEmailUseCase`) + `InMemoryEmailProvider`             | No                        |
+| `@codezone/email/nestjs`  | `EmailModule` (`forRoot`/`forRootAsync`)                                                | Sí                        |
+| `@codezone/email/testing` | `runEmailProviderContractTests` — suite de tests de comportamiento para adapters nuevos | No                        |
 
 ## Uso — sin NestJS
 
 ```ts
-import { InMemoryEmailProvider, SendEmailUseCase } from '@codezone/email';
+import { InMemoryEmailProvider, SendEmailUseCase } from "@codezone/email";
 
 const provider = new InMemoryEmailProvider();
 const sendEmail = new SendEmailUseCase(provider);
 
 const result = await sendEmail.execute({
-  to: { email: 'user@example.com' },
-  subject: 'Bienvenido',
-  content: { kind: 'html', html: '<p>Hola</p>', text: 'Hola' },
+  to: { email: "user@example.com" },
+  subject: "Bienvenido",
+  content: { kind: "html", html: "<p>Hola</p>", text: "Hola" },
 });
 // result: { messageId, provider, accepted, rejected }
 ```
@@ -47,8 +45,8 @@ const result = await sendEmail.execute({
 ## Uso — con NestJS
 
 ```ts
-import { EmailModule } from '@codezone/email/nestjs';
-import { InMemoryEmailProvider } from '@codezone/email';
+import { EmailModule } from "@codezone/email/nestjs";
+import { InMemoryEmailProvider } from "@codezone/email";
 
 @Module({
   imports: [
@@ -80,19 +78,21 @@ interface EmailMessage {
   cc?: EmailAddress[];
   bcc?: EmailAddress[];
   subject: string;
-  content: { kind: 'html'; html: string; text?: string } | { kind: 'text'; text: string };
+  content:
+    | { kind: "html"; html: string; text?: string }
+    | { kind: "text"; text: string };
   attachments?: EmailAttachment[];
   headers?: Record<string, string>;
   tags?: string[];
-  idempotencyKey?: string;   // mejor esfuerzo, no garantizado por todos los proveedores
+  idempotencyKey?: string; // mejor esfuerzo, no garantizado por todos los proveedores
   metadata?: { category?: string; sensitive?: boolean; [key: string]: unknown };
 }
 
 interface EmailSendResult {
   messageId: string;
   provider?: string;
-  accepted: string[];   // direcciones aceptadas, de to+cc+bcc
-  rejected: string[];   // direcciones rechazadas, de to+cc+bcc
+  accepted: string[]; // direcciones aceptadas, de to+cc+bcc
+  rejected: string[]; // direcciones rechazadas, de to+cc+bcc
 }
 ```
 
