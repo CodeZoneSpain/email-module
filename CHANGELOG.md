@@ -2,6 +2,24 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/). Versionado según [SemVer](https://semver.org/lang/es/).
 
+## [0.2.1] - 2026-08-03
+
+### Corregido
+- `ResendEmailProvider` podía mandar `to: []` a la API cuando la única dirección de `to` era inválida pero `cc`/`bcc` tenían alguna válida — Resend exige `to` no vacío y hubiera rechazado el request entero. Ahora se valida explícitamente antes de llamar.
+- Una respuesta 2xx con JSON inválido o sin `id` ya no puede colarse como `SyntaxError` ni como `messageId: undefined` — se valida y se mapea a `EmailTemporaryError`.
+- `apiKey` vacío y `defaultFrom.email` con formato inválido ahora fallan en el constructor (`EmailConfigurationError`) en vez de en el primer `send()` fallido — el adapter se valida a sí mismo, no depende de que cada consumidor lo valide antes de instanciarlo.
+- `timeoutMs` inválido (negativo, `0`, `Infinity`, no entero) ahora falla en el constructor (`EmailConfigurationError`) — antes podía hacer que `AbortSignal.timeout()` tirara y esa excepción se mapeaba incorrectamente a `EmailTemporaryError`, un error de config disfrazado de error transitorio.
+- Un 409 de Resend por `concurrent_idempotent_requests` (otra request con la misma `Idempotency-Key` todavía en curso) ahora mapea a `EmailTemporaryError` (retryable) en vez de `EmailPermanentRejectionError` — se sigue tratando como permanente un `invalid_idempotent_request` (mismo key, payload distinto) o cualquier 409 sin ese campo reconocible. **Nota:** no pude confirmar contra la documentación en vivo de Resend en qué campo exacto del JSON viaja ese código (su doc no muestra un ejemplo de body) — se revisan `name`/`type`/`code` de forma defensiva; si Resend usa otro nombre de campo, cae al comportamiento previo (permanente), no se rompe nada, pero convendría confirmarlo con un 409 real cuando aparezca uno.
+- `retryAfterSeconds` (en `EmailRateLimitedError`) ahora es `undefined` si el header `retry-after` no es numérico, está vacío, es negativo, **o está ausente** — `Number(null) === 0` y `Number.isFinite(0) === true`, así que un header ausente se colaba como `retryAfterSeconds: 0` en vez de `undefined`. Confirmado corriendo el JS compilado antes y después del fix.
+
+### Añadido
+- Timeout configurable (`timeoutMs`, default 10s) vía `AbortSignal.timeout()` — un fetch colgado ya no puede bloquear indefinidamente. Mapea a `EmailTemporaryError`.
+- `EmailMessage.idempotencyKey` ahora se manda como header `Idempotency-Key` (soportado nativamente por Resend, dedup 24h). Se valida el máximo de 256 caracteres de Resend (`EmailValidationError` si se excede).
+- `message.from` con formato de dirección inválido ahora se valida explícitamente (`EmailValidationError`).
+
+### Decisión de diseño
+- `EmailMessage.tags` (`string[]`) no se manda a Resend — su API espera pares `{name, value}` y no hay una conversión no-ambigua entre ambos shapes. Mandar algo inventado sería tan arbitrario como omitirlo. Si se necesita de verdad, hay que rediseñar `tags` en el core primero.
+
 ## [0.2.0] - 2026-08-03
 
 ### Añadido

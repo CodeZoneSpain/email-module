@@ -5,6 +5,8 @@ export interface ResendEmailProviderOptions {
     apiKey: string;
     /** Usado si el EmailMessage no trae `from` propio. */
     defaultFrom?: EmailAddress;
+    /** Default 10000ms. Mapea a EmailTemporaryError si se cumple. */
+    timeoutMs?: number;
 }
 /**
  * Adapter real contra la API HTTP de Resend
@@ -24,6 +26,7 @@ export interface ResendEmailProviderOptions {
 export declare class ResendEmailProvider implements EmailProviderPort {
     private readonly options;
     private readonly fetchImpl;
+    private readonly timeoutMs;
     constructor(options: ResendEmailProviderOptions, fetchImpl?: typeof fetch);
     send(message: EmailMessage): Promise<EmailSendResult>;
 }
