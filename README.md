@@ -46,21 +46,34 @@ const result = await sendEmail.execute({
 
 ```ts
 import { EmailModule } from "@codezone/email/nestjs";
-import { InMemoryEmailProvider } from "@codezone/email";
+import { InMemoryEmailProvider, ResendEmailProvider } from "@codezone/email";
 
 @Module({
   imports: [
+    // dev/test — no envía nada real
     EmailModule.forRoot({ provider: new InMemoryEmailProvider() }),
-    // o async, leyendo config/secretos:
+
+    // producción — async, leyendo config/secretos
     // EmailModule.forRootAsync({
     //   imports: [ConfigModule],
     //   inject: [ConfigService],
-    //   useFactory: (config: ConfigService) => new ResendEmailProvider(config.get('RESEND_API_KEY')),
+    //   useFactory: (config: ConfigService) =>
+    //     new ResendEmailProvider({
+    //       apiKey: config.get('RESEND_API_KEY'),
+    //       defaultFrom: { email: config.get('EMAIL_FROM_ADDRESS') },
+    //     }),
     // }),
   ],
 })
 export class AppModule {}
 ```
+
+## Adapters incluidos
+
+| Adapter | Para qué | Notas |
+|---|---|---|
+| `InMemoryEmailProvider` | Tests automatizados, dev/staging sin proveedor real | No envía nada — guarda en `sentEmails` |
+| `ResendEmailProvider` | Producción, vía [Resend](https://resend.com) | Sin SDK, usa `fetch` nativo. `defaultFrom` opcional si cada `EmailMessage` ya trae su propio `from`. Filtra direcciones con formato inválido antes de llamar a la API — Resend no da éxito parcial por request. |
 
 `SendEmailUseCase` queda disponible para inyectar en cualquier use case de la app consumidora:
 

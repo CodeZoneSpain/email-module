@@ -2,6 +2,15 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/). Versionado según [SemVer](https://semver.org/lang/es/).
 
+## [0.2.0] - 2026-08-03
+
+### Añadido
+- `ResendEmailProvider` — primer adapter real (https://resend.com/docs/api-reference/emails/send-email), sin el SDK oficial, vía `fetch` nativo de Node 20+. Exportado desde la raíz del paquete (no necesita entrada separada, no le suma dependencias a nadie que no lo use).
+- Mapea la respuesta HTTP de Resend a la jerarquía de errores del core: `401/403 → EmailProviderAuthError`, `429 → EmailRateLimitedError` (con `retryAfterSeconds` del header `retry-after`), `5xx → EmailTemporaryError`, otros `4xx → EmailPermanentRejectionError`, fallo de red → `EmailTemporaryError` (nunca reenvía el error crudo).
+
+### Decisión de diseño
+- Resend (como la mayoría de proveedores reales) no da éxito parcial por request — un solo POST se acepta o se rechaza entero. `ResendEmailProvider` filtra direcciones con formato inválido **antes** de llamar a la API (mismo criterio que `InMemoryEmailProvider`), para poder cumplir igual el contrato compartido de éxito parcial sin desperdiciar un request que Resend rechazaría entero por una sola dirección mala.
+
 ## [0.1.1] - 2026-08-03
 
 ### Corregido
